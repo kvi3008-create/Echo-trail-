@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Echo Trail</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body { 
+      margin: 0; 
+      background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
+      color: #eee; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      height: 100vh;
+      overflow: hidden;
+    }
+    h1 {
+      margin: 10px;
+      font-size: 2.2em;
+      color: #0af;
+      text-shadow: 0 0 8px #0af, 0 0 20px #08f;
+      animation: pulse 2s infinite;
+      text-align: center;
+    }
+    @keyframes pulse {
+      0%,100% { text-shadow: 0 0 8px #0af, 0 0 20px #08f; }
+      50% { text-shadow: 0 0 20px #0ff, 0 0 40px #0af; }
+    }
+    canvas { 
+      background: radial-gradient(circle at center, #222 0%, #111 100%);
+      margin: 10px 0; 
+      border: 3px solid #0af; 
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 170, 255, 0.5);
+      transition: transform 0.3s;
+      max-width: 95vw;
+      height: auto;
+    }
+    canvas:hover { transform: scale(1.01); }
+    #ui, #levelSelector, #editorTools { 
+      margin: 8px; 
+      display: flex; 
+      gap: 8px; 
+      flex-wrap: wrap; 
+      justify-content: center; 
+    }
+    button { 
+      padding: 10px 18px; 
+      border: none; 
+      border-radius: 10px; 
+      background: linear-gradient(135deg, #0af, #08f);
+      color: white; 
+      cursor: pointer; 
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      font-size: 1em;
+      box-shadow: 0 0 10px rgba(0,170,255,0.6);
+      transition: all 0.2s ease-in-out;
+      flex: 1;
+      min-width: 100px;
+    }
+    button:hover { 
+      background: linear-gradient(135deg, #08f, #0ff);
+      box-shadow: 0 0 20px rgba(0,200,255,0.8);
+      transform: translateY(-2px);
+    }
+    .activeTool { background: linear-gradient(135deg, #0f0, #0a0) !important; box-shadow: 0 0 15px #0f0; }
+    #mobileControls {
+      display: none;
+      margin: 10px;
+      grid-template-columns: repeat(3, 60px);
+      grid-template-rows: repeat(2, 60px);
+      gap: 10px;
+      justify-content: center;
+    }
+    #mobileControls button {
+      font-size: 1.5em;
+      padding: 0;
+      min-width: 60px;
+      min-height: 60px;
+    }
+    @media (max-width: 768px) {
+      #mobileControls { display: grid; }
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Echo Trail ✨</h1>
+  <div id="ui">
+    <button id="pauseBtn">⏸ Pause (P)</button>
+    <button id="muteBtn">🔇 Mute (M)</button>
+    <button id="dailyBtn">📅 Daily</button>
+    <button id="editorBtn">🛠️ Editor</button>
+  </div>
+  <div id="levelSelector"></div>
+  <canvas id="game" width="600" height="400"></canvas>
+  <div id="editorTools" style="display:none;"></div>
+  <div id="mobileControls">
+    <div></div>
+    <button id="upBtn">⬆️</button>
+    <div></div>
+    <button id="leftBtn">⬅️</button>
+    <button id="downBtn">⬇️</button>
+    <button id="rightBtn">➡️</button>
+  </div>
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    let keys = {};
+
+    window.addEventListener("keydown", e => keys[e.key] = true);
+    window.addEventListener("keyup", e => keys[e.key] = false);
+
+    // Mobile button controls
+    function pressKey(k){ keys[k] = true; setTimeout(()=>keys[k]=false,150);} 
+    document.getElementById("upBtn").onclick = ()=>pressKey("ArrowUp");
+    document.getElementById("downBtn").onclick = ()=>pressKey("ArrowDown");
+    document.getElementById("leftBtn").onclick = ()=>pressKey("ArrowLeft");
+    document.getElementById("rightBtn").onclick = ()=>pressKey("ArrowRight");
+
+    // Swipe controls
+    let touchStartX = 0, touchStartY = 0;
+    canvas.addEventListener("touchstart", e => {
+      const t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+    });
+
+    canvas.addEventListener("touchend", e => {
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = t.clientY - touchStartY;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 30) pressKey("ArrowRight");
+        else if (dx < -30) pressKey("ArrowLeft");
+      } else {
+        if (dy > 30) pressKey("ArrowDown");
+        else if (dy < -30) pressKey("ArrowUp");
+      }
+    });
+
+    // Register service worker for offline play
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+      .then(() => console.log('Service Worker registered!'))
+      .catch(err => console.error('SW registration failed:', err));
+    }
+
+    // (Rest of game logic unchanged)
+  </script>
+</body>
+</html>
